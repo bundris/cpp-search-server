@@ -7,10 +7,11 @@
 #include <utility>
 #include <vector>
 #include <optional>
+#include <numeric>
 
 using namespace std;
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
-
+const double ACCURACY_THRESHOLD = 1e-6;
 struct Document {
     Document() = default;
 
@@ -65,8 +66,11 @@ public:
     }
 
     void AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
-        if ((document_id < 0) || (documents_.count(document_id) > 0)) {
-            throw invalid_argument("Document ID is incorrect or already exist"s);
+        if (document_id < 0) {
+            throw invalid_argument("Document ID is negative"s);
+        }
+        if (documents_.count(document_id) > 0) {
+            throw invalid_argument("Document ID already exist"s);
         }
         vector<string> words = SplitIntoWordsNoStop(document);
         const double inv_word_count = 1.0 / words.size();
@@ -83,7 +87,7 @@ public:
         auto matched_documents = FindAllDocuments(query, document_predicate);
 
         sort(matched_documents.begin(), matched_documents.end(), [](const Document& lhs, const Document& rhs) {
-            if (abs(lhs.relevance - rhs.relevance) < 1e-6) {
+            if (abs(lhs.relevance - rhs.relevance) < ACCURACY_THRESHOLD) {
                 return lhs.rating > rhs.rating;
             } else {
                 return lhs.relevance > rhs.relevance;
@@ -164,7 +168,7 @@ private:
         vector<string> words;
         for (const string& word : SplitIntoWords(text)) {
             if (!IsValidWord(word)) {
-                throw invalid_argument("0-31 symbol detected"s);
+                throw invalid_argument("0-31 symbol detected in word: "s + word);
             }
             if (!IsStopWord(word)) {
                 words.push_back(word);
@@ -178,7 +182,7 @@ private:
         set<string> correct_stop_words;
         for (const string& word: strings){
             if (!IsValidWord(word)){
-                throw invalid_argument("Stop word list contains 0-31 symbols"s);
+                throw invalid_argument("Stop word list contains 0-31 symbols in word: "s + word);
             }
             if (!word.empty()){
                 correct_stop_words.insert(word);
@@ -191,10 +195,7 @@ private:
         if (ratings.empty()) {
             return 0;
         }
-        int rating_sum = 0;
-        for (const int rating : ratings) {
-            rating_sum += rating;
-        }
+        int rating_sum = accumulate(ratings.begin(), ratings.end(), 0);
         return rating_sum / static_cast<int>(ratings.size());
     }
 
