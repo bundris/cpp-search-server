@@ -19,13 +19,13 @@ public:
         std::vector<Document> results = server_.FindTopDocuments(raw_query, document_predicate);
         if (!requests_.empty()) {
             while(current_time_ - requests_.front().request_time >= min_in_day_) {
-                if (requests_.front().docs.empty()){
+                if (requests_.front().docs == 0){
                     --no_results_;
                 }
                 requests_.pop_front();
             }
         }
-        requests_.push_back({results, current_time_});
+        requests_.push_back({static_cast<int>(results.size()), current_time_});
         if (results.empty()) {
             ++no_results_;
         }
@@ -46,7 +46,7 @@ public:
     }
 private:
     struct QueryResult {
-        std::vector<Document> docs;
+        int docs;
         int request_time;
     };
     std::deque<QueryResult> requests_;
