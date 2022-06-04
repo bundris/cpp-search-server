@@ -1,7 +1,3 @@
-//
-// Created by BORIS KARPOV on 21/05/2022.
-//
-
 #include "document.h"
 using std::string_literals::operator""s;
 

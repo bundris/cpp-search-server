@@ -1,6 +1,3 @@
-//
-// Created by BORIS KARPOV on 21/05/2022.
-//
 #pragma once
 #include <vector>
 #include <set>

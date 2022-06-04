@@ -1,6 +1,3 @@
-//
-// Created by BORIS KARPOV on 21/05/2022.
-//
 #include <numeric>
 #include "search_server.h"
 
@@ -17,6 +14,7 @@ void SearchServer::AddDocument(int document_id, const std::string& document, Doc
     const double inv_word_count = 1.0 / words.size();
     for (const std::string& word : words) {
         word_to_document_freqs_[word][document_id] += inv_word_count;
+        docId_to_word_freqs_[document_id][word] += inv_word_count; //new index id->words
     }
     documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
     document_ids_.push_back(document_id);
@@ -36,9 +34,39 @@ int SearchServer::GetDocumentCount() const {
     return documents_.size();
 }
 
+/*
 int SearchServer::GetDocumentId(int index) const {
     return document_ids_.at(index);
 }
+*/
+
+std::vector<int>::const_iterator SearchServer::begin() const {
+    return document_ids_.begin();
+}
+
+std::vector<int>::const_iterator SearchServer::end() const {
+    return document_ids_.end();
+}
+
+const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    return docId_to_word_freqs_.at(document_id);
+}
+
+void SearchServer::RemoveDocument(int document_id) {
+    if (std::count(document_ids_.begin(), document_ids_.end(), document_id)) {
+        //если нужный ID вообще есть, пересчитываем word_to_document_freqs_; document_ids_; documents_;
+        auto iter = std::find(document_ids_.begin(), document_ids_.end(),document_id);
+        documents_.erase(document_id);
+        document_ids_.erase(iter);
+        //теперь удаляем записи из word_to_document_freqs_ и пересчитываем характеристики
+        for (auto& [word, doc_to_freq]: word_to_document_freqs_) {
+            doc_to_freq.erase(document_id);
+        }
+        docId_to_word_freqs_.erase(document_id);
+    }
+}
+
+
 
 std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument(const std::string& raw_query, int document_id) const {
     const auto query = ParseQuery(raw_query);
@@ -156,11 +184,12 @@ void FindTopDocuments(const SearchServer& search_server, const std::string& raw_
 }
 
 void MatchDocuments(const SearchServer& search_server, const std::string& query) {
+    //LOG_DURATION_STREAM("Operation time", std::cout);
     try {
         std::cout << "Матчинг документов по запросу: "s << query << std::endl;
         const int document_count = search_server.GetDocumentCount();
         for (int index = 0; index < document_count; ++index) {
-            const int document_id = search_server.GetDocumentId(index);
+            const int document_id = *(search_server.begin()+index);
             const auto [words, status] = search_server.MatchDocument(query, document_id);
             PrintMatchDocumentResult(document_id, words, status);
         }

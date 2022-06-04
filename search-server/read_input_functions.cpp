@@ -1,7 +1,3 @@
-//
-// Created by BORIS KARPOV on 21/05/2022.
-//
-
 #include "read_input_functions.h"
 
 std::string ReadLine() {
