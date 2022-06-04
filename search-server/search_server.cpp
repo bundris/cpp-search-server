@@ -17,7 +17,7 @@ void SearchServer::AddDocument(int document_id, const std::string& document, Doc
         docId_to_word_freqs_[document_id][word] += inv_word_count; //new index id->words
     }
     documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
-    document_ids_.push_back(document_id);
+    document_ids_.insert(document_id);
 }
 
 std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query, DocumentStatus status) const {
@@ -40,30 +40,34 @@ int SearchServer::GetDocumentId(int index) const {
 }
 */
 
-std::vector<int>::const_iterator SearchServer::begin() const {
+std::set<int>::const_iterator SearchServer::begin() const {
     return document_ids_.begin();
 }
 
-std::vector<int>::const_iterator SearchServer::end() const {
+std::set<int>::const_iterator SearchServer::end() const {
     return document_ids_.end();
 }
 
 const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    static std::map<std::string, double> dummy;
+    if (docId_to_word_freqs_.count(document_id) == 0) {
+        return dummy;
+    }
     return docId_to_word_freqs_.at(document_id);
 }
 
 void SearchServer::RemoveDocument(int document_id) {
-    if (std::count(document_ids_.begin(), document_ids_.end(), document_id)) {
-        //если нужный ID вообще есть, пересчитываем word_to_document_freqs_; document_ids_; documents_;
-        auto iter = std::find(document_ids_.begin(), document_ids_.end(),document_id);
-        documents_.erase(document_id);
-        document_ids_.erase(iter);
-        //теперь удаляем записи из word_to_document_freqs_ и пересчитываем характеристики
-        for (auto& [word, doc_to_freq]: word_to_document_freqs_) {
-            doc_to_freq.erase(document_id);
-        }
-        docId_to_word_freqs_.erase(document_id);
+    auto iter = document_ids_.find(document_id);
+    if (iter == document_ids_.end()) {
+        return;
     }
+    documents_.erase(document_id);
+    document_ids_.erase(iter);
+    //теперь удаляем записи из word_to_document_freqs_ и пересчитываем характеристики
+    for (auto& [word, doc_to_freq]: word_to_document_freqs_) {
+        doc_to_freq.erase(document_id);
+    }
+    docId_to_word_freqs_.erase(document_id);
 }
 
 
@@ -189,7 +193,7 @@ void MatchDocuments(const SearchServer& search_server, const std::string& query)
         std::cout << "Матчинг документов по запросу: "s << query << std::endl;
         const int document_count = search_server.GetDocumentCount();
         for (int index = 0; index < document_count; ++index) {
-            const int document_id = *(search_server.begin()+index);
+            const int document_id = index;
             const auto [words, status] = search_server.MatchDocument(query, document_id);
             PrintMatchDocumentResult(document_id, words, status);
         }

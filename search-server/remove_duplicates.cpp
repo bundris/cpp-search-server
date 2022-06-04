@@ -12,7 +12,7 @@ void RemoveDuplicates(SearchServer& search_server) {
         for (auto& [word, _]: word_to_rate) {
             mapper.insert(word);
         }
-        if (uniq.count(mapper)) {
+        if (uniq.count(mapper) > 0) {
             duplicates.insert(doc_id);
         } else {
             uniq.insert(mapper);
