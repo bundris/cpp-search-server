@@ -10,7 +10,7 @@
 #include "log_duration.h"
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
-const double ACC_THRESHOLD = 1e-6;
+const double ACCURACY_THRESHOLD = 1e-6;
 
 class SearchServer {
 public:
@@ -18,20 +18,23 @@ public:
     template <class StringContainer>
     explicit SearchServer(const StringContainer& stop_words);
     explicit SearchServer(const std::string& stop_words_text);
-    //methods
+
+    //document operation methods
     void AddDocument(int document_id, const std::string& document,
                      DocumentStatus status, const std::vector<int>& ratings);
+    void RemoveDocument(int document_id);
 
+    //search documents
     template <typename DocumentPredicate>
     std::vector<Document> FindTopDocuments(const std::string& raw_query, DocumentPredicate document_predicate) const;
     std::vector<Document> FindTopDocuments(const std::string& raw_query, DocumentStatus status) const;
     std::vector<Document> FindTopDocuments(const std::string& raw_query) const;
+
+    //iterators and getters
     int GetDocumentCount() const;
-    //int GetDocumentId(int index) const;
     std::set<int>::const_iterator begin() const;
     std::set<int>::const_iterator end() const;
     const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
-    void RemoveDocument(int document_id);
 
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query, int document_id) const;
 
@@ -83,11 +86,10 @@ SearchServer::SearchServer(const StringContainer& stop_words)
 
 template <typename DocumentPredicate>
 std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query, DocumentPredicate document_predicate) const {
-    //LOG_DURATION_STREAM("Operation time", std::cout);
     const auto query = ParseQuery(raw_query);
     auto matched_documents = FindAllDocuments(query, document_predicate);
     sort(matched_documents.begin(), matched_documents.end(), [](const Document& lhs, const Document& rhs) {
-        if (std::abs(lhs.relevance - rhs.relevance) < ACC_THRESHOLD) {
+        if (std::abs(lhs.relevance - rhs.relevance) < ACCURACY_THRESHOLD) {
             return lhs.rating > rhs.rating;
         } else {
             return lhs.relevance > rhs.relevance;

@@ -49,7 +49,7 @@ std::set<int>::const_iterator SearchServer::end() const {
 }
 
 const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const {
-    static std::map<std::string, double> dummy;
+    static const std::map<std::string, double> dummy;
     if (document_to_word_freqs_.count(document_id) == 0) {
         return dummy;
     }
@@ -188,7 +188,6 @@ void FindTopDocuments(const SearchServer& search_server, const std::string& raw_
 }
 
 void MatchDocuments(const SearchServer& search_server, const std::string& query) {
-    //LOG_DURATION_STREAM("Operation time", std::cout);
     try {
         std::cout << "Матчинг документов по запросу: "s << query << std::endl;
         const int document_count = search_server.GetDocumentCount();
