@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <execution>
 #include <stdexcept>
 #include "document.h"
 #include "string_processing.h"
@@ -22,6 +23,9 @@ public:
     //document operation methods
     void AddDocument(int document_id, const std::string& document,
                      DocumentStatus status, const std::vector<int>& ratings);
+
+    void RemoveDocument(std::execution::parallel_policy policy, int document_id);
+    void RemoveDocument(std::execution::sequenced_policy policy, int document_id);
     void RemoveDocument(int document_id);
 
     //search documents
@@ -36,6 +40,14 @@ public:
     std::set<int>::const_iterator end() const;
     const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
 
+    std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(
+            std::execution::parallel_policy policy,
+            const std::string& raw_query,
+            int document_id) const;
+    std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(
+            std::execution::sequenced_policy policy,
+            const std::string& raw_query,
+            int document_id) const;
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query, int document_id) const;
 
 private:
@@ -51,8 +63,8 @@ private:
     };
 
     struct Query {
-        std::set<std::string> plus_words;
-        std::set<std::string> minus_words;
+        std::vector<std::string> plus_words;
+        std::vector<std::string> minus_words;
     };
 
     const std::set<std::string> stop_words_;
@@ -66,6 +78,9 @@ private:
     std::vector<std::string> SplitIntoWordsNoStop(const std::string& text) const;
     static int ComputeAverageRating(const std::vector<int>& ratings);
     QueryWord ParseQueryWord(const std::string& text) const;
+
+    Query ParseQuery(std::execution::parallel_policy policy, const std::string& text) const;
+    Query ParseQuery(std::execution::sequenced_policy policy, const std::string& text) const;
     Query ParseQuery(const std::string& text) const;
     double ComputeWordInverseDocumentFreq(const std::string& word) const;
 
