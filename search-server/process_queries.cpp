@@ -23,10 +23,10 @@ std::vector<Document> ProcessQueriesJoined(
 
     auto docs_by_queries = ProcessQueries(search_server, queries);
     size_t k = std::accumulate(docs_by_queries.begin(), docs_by_queries.end(),
-                                   0,
-                                   [](const size_t lhs, const std::vector<Document>& rhs) {
-                                       return lhs + rhs.size();
-                                   });
+                               0,
+                               [](const size_t lhs, const std::vector<Document>& rhs) {
+                                   return lhs + rhs.size();
+                               });
     std::vector<Document> result(k);
     auto start = result.begin();
     for (const auto& vect: docs_by_queries) {
