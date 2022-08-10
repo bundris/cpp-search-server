@@ -5,6 +5,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include "process_queries.h"
 using namespace std;
 string GenerateWord(mt19937& generator, int max_length) {
     const int length = uniform_int_distribution(1, max_length)(generator);
@@ -65,7 +66,7 @@ int main() {
     for (size_t i = 0; i < documents.size(); ++i) {
         search_server.AddDocument(i, documents[i], DocumentStatus::ACTUAL, {1, 2, 3});
     }
-    const auto queries = GenerateQueries(generator, dictionary, 100, 70);
+    const auto queries = GenerateQueries(generator, dictionary, 10, 70);
     TEST(seq);
     TEST(par);
 }

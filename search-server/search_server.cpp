@@ -32,9 +32,26 @@ std::vector<Document> SearchServer::FindTopDocuments(const std::string_view raw_
         return document_status == status;
     });
 }
+std::vector<Document> SearchServer::FindTopDocuments(std::execution::parallel_policy policy, const std::string_view raw_query, DocumentStatus status) const {
+    return FindTopDocuments(policy, raw_query, [status](int document_id, DocumentStatus document_status, int rating) {
+        return document_status == status;
+    });
+}
+
+std::vector<Document> SearchServer::FindTopDocuments(std::execution::sequenced_policy policy, const std::string_view raw_query, DocumentStatus status) const {
+    return FindTopDocuments(policy, raw_query, [status](int document_id, DocumentStatus document_status, int rating) {
+        return document_status == status;
+    });
+}
 
 std::vector<Document> SearchServer::FindTopDocuments(const std::string_view raw_query) const {
     return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
+}
+std::vector<Document> SearchServer::FindTopDocuments(std::execution::parallel_policy policy, const std::string_view raw_query) const {
+    return FindTopDocuments(policy, raw_query, DocumentStatus::ACTUAL);
+}
+std::vector<Document> SearchServer::FindTopDocuments(std::execution::sequenced_policy policy ,const std::string_view raw_query) const {
+    return FindTopDocuments(policy, raw_query, DocumentStatus::ACTUAL);
 }
 
 int SearchServer::GetDocumentCount() const {
